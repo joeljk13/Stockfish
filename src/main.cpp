@@ -18,6 +18,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cstring>
 #include <iostream>
 
 #include "bitboard.h"
@@ -31,6 +32,8 @@
 namespace PSQT {
   void init();
 }
+
+bool eval = false;
 
 int main(int argc, char* argv[]) {
 
@@ -46,6 +49,14 @@ int main(int argc, char* argv[]) {
   Threads.init();
   Tablebases::init(Options["SyzygyPath"]);
   TT.resize(Options["Hash"]);
+
+  if (argc >= 2 && !strcmp(argv[1], "--eval")) {
+    for (int i = 2; i <= argc; ++i) {
+      argv[i - 1] = argv[i];
+    }
+    --argc;
+    eval = true;
+  }
 
   UCI::loop(argc, argv);
 

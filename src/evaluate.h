@@ -32,9 +32,14 @@ namespace Eval {
 const Value Tempo = Value(20); // Must be visible to search
 
 std::string trace(const Position& pos);
+std::string traceDiff(const Position& pos, double s[15][2][2]);
 
 template<bool DoTrace = false>
 Value evaluate(const Position& pos);
+}
+
+namespace Trace {
+  extern double scores[15][2][2];
 }
 
 #endif // #ifndef EVALUATE_H_INCLUDED

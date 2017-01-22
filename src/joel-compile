@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+make clean
+sed 's/-O3/$(JKOPTIMIZE)/g;s/-flto//g' Makefile >makefile
+make -f makefile profile-build ARCH=x86-64-modern \
+    JKOPTIMIZE="-O3 -flto -fprofile-correction" \
+    PGOBENCH="./stockfish bench 4096 2 3000 default time"
+make -f makefile PREFIX="$HOME/usr" install
+cp mystockfish ~/bin/mystockfish
+make clean

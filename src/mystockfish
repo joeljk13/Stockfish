@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+threads=$(($(lscpu | awk '$1 == "CPU(s):" {print $2}') / 2))
+syzygy=true
+pos=startpos
+hash=$(($(awk '$1 == "MemAvailable:" {print $2}' /proc/meminfo) * 3 / 4096))
+
+if [ "$hash" -gt 16384 ]; then
+    hash=16384
+fi
+
+for arg; do
+    if expr "$arg" '<' 64 >/dev/null; then
+        threads="$arg"
+    elif expr "$arg" '<' 65536 >/dev/null; then
+        hash="$arg"
+    elif [ "$arg" = true ] || [ "$arg" = false ]; then
+        syzygy="$arg"
+    elif grep -q fen <<<"$arg"; then
+        pos="$arg"
+    else
+        echo "unrecognized argument: $arg" >&2
+        exit 1
+    fi
+done
+
+if $syzygy; then
+    syzygy="$(find / -maxdepth 3 -type d -name syzygy 2>/dev/null | head -1)"
+    if ! [ -d "$syzygy" ]; then
+        syzygy=
+    fi
+else
+    syzygy=
+fi
+
+(cat <<EOF
+uci
+setoption name Threads value $threads
+setoption name Hash value $hash
+setoption name SyzygyPath value $syzygy
+ucinewgame
+position $pos
+isready
+EOF
+exec cat) | stockfish --eval

@@ -332,6 +332,22 @@ void MainThread::search() {
       std::cout << " ponder " << UCI::move(bestThread->rootMoves[0].pv[1], rootPos.is_chess960());
 
   std::cout << sync_endl;
+
+  extern bool eval;
+  if (eval) {
+    double scores[15][2][2];
+    Eval::trace(rootPos);
+    static_assert(sizeof(scores) == sizeof(Trace::scores), "FAIL");
+    memcpy(scores, Trace::scores, sizeof(scores));
+    StateListPtr States (new std::deque<StateInfo>(1));
+    for (Move &m : bestThread->rootMoves[0].pv) {
+      States->push_back(StateInfo());
+      rootPos.do_move(m, States->back(), rootPos.gives_check(m));
+    }
+
+    Eval::trace(rootPos);
+    std::cerr << Eval::traceDiff(rootPos, scores) << std::endl;
+  }
 }
 
 

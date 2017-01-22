@@ -29,7 +29,7 @@
 #include "material.h"
 #include "pawns.h"
 
-namespace {
+// namespace {
 
   namespace Trace {
 
@@ -792,7 +792,7 @@ namespace {
     return sf;
   }
 
-} // namespace
+// } // namespace
 
 
 /// evaluate() is the main evaluation function. It returns a static evaluation
@@ -898,6 +898,46 @@ std::string Eval::trace(const Position& pos) {
 
   Value v = evaluate<true>(pos);
   v = pos.side_to_move() == WHITE ? v : -v; // White's point of view
+
+  std::stringstream ss;
+  ss << std::showpoint << std::noshowpos << std::fixed << std::setprecision(2)
+     << "      Eval term |    White    |    Black    |    Total    \n"
+     << "                |   MG    EG  |   MG    EG  |   MG    EG  \n"
+     << "----------------+-------------+-------------+-------------\n"
+     << "       Material | " << Term(MATERIAL)
+     << "      Imbalance | " << Term(IMBALANCE)
+     << "          Pawns | " << Term(PAWN)
+     << "        Knights | " << Term(KNIGHT)
+     << "         Bishop | " << Term(BISHOP)
+     << "          Rooks | " << Term(ROOK)
+     << "         Queens | " << Term(QUEEN)
+     << "       Mobility | " << Term(MOBILITY)
+     << "    King safety | " << Term(KING)
+     << "        Threats | " << Term(THREAT)
+     << "   Passed pawns | " << Term(PASSED)
+     << "          Space | " << Term(SPACE)
+     << "----------------+-------------+-------------+-------------\n"
+     << "          Total | " << Term(TOTAL);
+
+  ss << "\nTotal Evaluation: " << to_cp(v) << " (white side)\n";
+
+  return ss.str();
+}
+
+std::string Eval::traceDiff(const Position& pos, double s[15][2][2]) {
+
+  std::memset(scores, 0, sizeof(scores));
+
+  Value v = evaluate<true>(pos);
+  v = pos.side_to_move() == WHITE ? v : -v; // White's point of view
+
+  for (int i = 0; i < 15; ++i) {
+    for (int j = 0; j < 2; ++j) {
+      for (int k = 0; k < 2; ++k) {
+        Trace::scores[i][j][k] -= s[i][j][k];
+      }
+    }
+  }
 
   std::stringstream ss;
   ss << std::showpoint << std::noshowpos << std::fixed << std::setprecision(2)
