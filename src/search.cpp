@@ -333,20 +333,19 @@ void MainThread::search() {
 
   std::cout << sync_endl;
 
-  extern bool eval;
-  if (eval) {
-    double scores[15][2][2];
-    Eval::trace(rootPos);
-    static_assert(sizeof(scores) == sizeof(Trace::scores), "FAIL");
-    memcpy(scores, Trace::scores, sizeof(scores));
+  extern bool eval, printEval;
+  if (eval && printEval) {
     StateListPtr States (new std::deque<StateInfo>(1));
     for (Move &m : bestThread->rootMoves[0].pv) {
       States->push_back(StateInfo());
-      rootPos.do_move(m, States->back(), rootPos.gives_check(m));
+      rootPos.do_move(m, States->back());
     }
 
-    Eval::trace(rootPos);
-    std::cerr << Eval::traceDiff(rootPos, scores) << std::endl;
+    sync_cout << Eval::trace(rootPos) << sync_endl;
+
+    for (size_t i = bestThread->rootMoves[0].pv.size(); i-- > 0; ) {
+      rootPos.undo_move(bestThread->rootMoves[0].pv[i]);
+    }
   }
 }
 

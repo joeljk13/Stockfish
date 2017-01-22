@@ -30,10 +30,13 @@
 #include "timeman.h"
 #include "uci.h"
 #include "syzygy/tbprobe.h"
+#include "types.h"
 
 using namespace std;
 
 extern void benchmark(const Position& pos, istream& is);
+
+bool printEval = false;
 
 namespace {
 
@@ -66,6 +69,10 @@ namespace {
     else if (token == "fen")
         while (is >> token && token != "moves")
             fen += token + " ";
+    else if (token == "move")
+    {
+      fen = pos.fen();
+    }
     else
         return;
 
@@ -163,6 +170,7 @@ void UCI::loop(int argc, char* argv[]) {
 
       token.clear(); // getline() could return empty or blank line
       is >> skipws >> token;
+      printEval = false;
 
       // The GUI sends 'ponderhit' to tell us to ponder on the same move the
       // opponent has played. In case Signals.stopOnPonderhit is set we are
@@ -196,6 +204,23 @@ void UCI::loop(int argc, char* argv[]) {
       else if (token == "setoption")  setoption(is);
 
       // Additional custom non-UCI commands, useful for debugging
+      else if (token == "cmp")
+      {
+        string limitstr, move1, move2;
+        unsigned int limit;
+        is >> limit >> move1 >> move2;
+        if (limit > MAX_PLY) {
+          limitstr = "movetime " + to_string(limit);
+        } else {
+          limitstr = "depth " + to_string(limit);
+        }
+        istringstream ss1 = istringstream(limitstr + " searchmoves " + move1),
+                      ss2 = istringstream(limitstr + " searchmoves " + move2);
+        printEval = true;
+        sync_cout << Eval::trace(pos) << sync_endl;
+        go(pos, ss1);
+        go(pos, ss2);
+      }
       else if (token == "flip")       pos.flip();
       else if (token == "bench")      benchmark(pos, is);
       else if (token == "d")          sync_cout << pos << sync_endl;
